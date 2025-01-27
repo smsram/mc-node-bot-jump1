@@ -43,7 +43,7 @@ function reconnectBot() {
 }
 
 // Create the bot for the first time
-createBot();
+// createBot();
 
 
 // const mineflayer = require('mineflayer');
