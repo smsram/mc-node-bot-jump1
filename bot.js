@@ -1,145 +1,67 @@
 const mineflayer = require('mineflayer');
 
-let bot;
+let bot; // Global bot instance
+let reconnecting = false; // To prevent multiple reconnect attempts
 
+// Function to create the bot
 function createBot() {
   bot = mineflayer.createBot({
-    host: 'smsram001-HpPI.aternos.me', // Replace with your Aternos server IP
+    host: 'smsram.aternos.me', // Replace with your Aternos server IP
     port: 48121,                      // Use your specific port
-    username: `Bot_${Math.floor(Math.random() * 10000)}`, // Random username
+    username: `Bot_Gadu`, // Random username
     version: '1.21.4',                // Specify the exact version of the server
     auth: 'offline',                  // Use offline auth for cracked servers
   });
 
   bot.on('spawn', () => {
-    console.log('Bot has spawned!');
+    console.log(`[${new Date().toISOString()}] Bot has spawned!`);
 
-    // Start moving forward and jumping
-    bot.setControlState('forward', true);
-    bot.setControlState('jump', true);
-
-    // Stop actions after 10 seconds
-    setTimeout(() => {
-      bot.setControlState('forward', false);
-      bot.setControlState('jump', false);
-      console.log('Bot stopped moving.');
-    }, 10000);
+    // Make the bot jump every 1 minute
+    setInterval(() => {
+      bot.setControlState('jump', true);
+      setTimeout(() => {
+        bot.setControlState('jump', false);
+        console.log(`[${new Date().toISOString()}] Bot performed a jump.`);
+      }, 500); // Jump for 500ms
+    }, 60000); // Jump every 1 minute (60000ms)
   });
 
   bot.on('kicked', (reason) => {
-    console.error('Bot was kicked:', reason);
+    console.error(`[${new Date().toISOString()}] Bot was kicked:`, reason);
+    attemptReconnect(); // Attempt to reconnect on kick
   });
 
   bot.on('error', (err) => {
-    console.error('Bot encountered an error:', err);
+    console.error(`[${new Date().toISOString()}] Bot encountered an error:`, err);
   });
 
   bot.on('end', () => {
-    console.log('Bot disconnected from the server.');
-    reconnectBot(); // Attempt to reconnect
+    console.log(`[${new Date().toISOString()}] Bot disconnected from the server.`);
+    attemptReconnect(); // Attempt to reconnect on disconnect
+  });
+
+  // Safely handle undefined entities to avoid crashes
+  bot._client.on('entity_attach', (packet) => {
+    const vehicle = bot.entities[packet.vehicle];
+    const passenger = bot.entities[packet.entity];
+    if (vehicle && passenger) {
+      vehicle.passengers = vehicle.passengers || [];
+      vehicle.passengers.push(passenger);
+    }
   });
 }
 
-// Function to reconnect the bot
-function reconnectBot() {
-  console.log('Reconnecting bot...');
+// Function to attempt bot reconnection
+function attemptReconnect() {
+  if (reconnecting) return;
+  reconnecting = true;
+
+  console.log(`[${new Date().toISOString()}] Reconnecting bot...`);
   setTimeout(() => {
+    reconnecting = false;
     createBot(); // Create a new bot instance to reconnect
   }, 5000); // Retry after 5 seconds
 }
 
 // Create the bot for the first time
 createBot();
-
-
-// const mineflayer = require('mineflayer');
-
-// // Function to create the bot instance
-// function createBot() {
-//   const bot = mineflayer.createBot({
-//     host: 'smsram001-HpPI.aternos.me', // Replace with your Aternos server IP
-//     port: 48121,                      // Use your specific port
-//     username: 'BotName',              // Bot username
-//     version: '1.21.4',                // PaperMC version
-//   });
-
-//   bot.on('spawn', () => {
-//     console.log('Bot has spawned!');
-
-//     // Start moving forward and jumping continuously
-//     bot.setControlState('forward', true);
-//     bot.setControlState('jump', true);
-
-//     console.log('Bot is now always moving.');
-//   });
-
-//   // Handle disconnection and errors
-//   bot.on('kicked', (reason) => {
-//     console.error('Bot was kicked:', reason);
-//   });
-
-//   bot.on('error', (err) => {
-//     console.error('Bot encountered an error:', err);
-//   });
-
-//   bot.on('end', () => {
-//     console.log('Bot disconnected from the server.');
-//     reconnectBot(); // Recreate the bot after disconnection
-//   });
-// }
-
-// // Function to recreate the bot after disconnection
-// function reconnectBot() {
-//   console.log('Reconnecting bot...');
-//   setTimeout(() => {
-//     createBot(); // Recreate the bot instance
-//   }, 5000); // Retry after 5 seconds
-// }
-
-// // Create the bot for the first time
-// createBot();
-
-
-// const mineflayer = require('mineflayer');
-
-// const bot = mineflayer.createBot({
-//   host: 'smsram001-HpPI.aternos.me', // Replace with your Aternos server IP
-//   port: 48121,                      // Use your specific port
-//   username: 'Server Bot',              // Bot username
-//   version: '1.21.4',                // Specify the exact version of the server
-// });
-
-// bot.on('spawn', () => {
-//   console.log('Bot has spawned!');
-
-//   // Start moving forward and jumping.
-//   bot.setControlState('forward', true);
-//   bot.setControlState('jump', true);
-
-//   // Stop actions after 10 seconds.
-//   setTimeout(() => {
-//     bot.setControlState('forward', false);
-//     bot.setControlState('jump', false);
-//     console.log('Bot stopped moving.');
-//   }, 10000);
-// });
-
-// // Handle disconnection and errors.
-// bot.on('kicked', (reason) => {
-//   console.error('Bot was kicked:', reason);
-// });
-// bot.on('error', (err) => {
-//   console.error('Bot encountered an error:', err);
-// });
-// bot.on('end', () => {
-//   console.log('Bot disconnected from the server.');
-//   reconnectBot(); // Attempt to reconnect
-// });
-
-// // Function to reconnect the bot
-// function reconnectBot() {
-//   console.log('Reconnecting bot...');
-//   setTimeout(() => {
-//     bot.connect();
-//   }, 5000); // Retry after 5 seconds
-// }
