@@ -15,3 +15,6 @@ COPY . .
 
 # Define the command to run the bot
 CMD ["npm", "start"]
+
+# Make sure node 22.x is used (if environment defaults to 16.x)
+RUN node -v
