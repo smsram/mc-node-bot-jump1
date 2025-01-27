@@ -1,0 +1,15 @@
+{
+  "name": "minecraft-bot",
+  "version": "1.0.0",
+  "description": "A simple Minecraft bot hosted on Render",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "mineflayer": "^4.5.1" // Make sure this version is compatible with your bot setup
+  },
+  "engines": {
+    "node": "16.x" // Render supports Node.js 16.x
+  }
+}
