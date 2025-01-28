@@ -2,23 +2,29 @@ name: Restart Railway Server
 
 on:
   schedule:
-    - cron: "*/5 * * * *" # Runs every 5 minutes
+    - cron: "0 * * * *" # Runs every 5 minutes
 
 jobs:
   restart:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install Railway CLI
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18 # Use the version compatible with your project
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Set up Railway CLI
         run: curl -fsSL https://railway.app/install.sh | sh
 
       - name: Login to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: echo "${RAILWAY_TOKEN}" | railway login --key -
+        run: railway login --token ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Restart Railway Service
         run: railway up --detach
