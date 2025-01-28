@@ -10,28 +10,5 @@
     "mineflayer": "^4.5.0"
   },
   "author": "S Meher Siva Ram",
-  "license": "MIT",
-  "steps": {
-    "1": {
-      "step": "Upgrade Dependencies",
-      "description": "Check if there are any updates to the libraries you're using (in this case, mineflayer or any other dependencies).",
-      "command": "npm update"
-    },
-    "2": {
-      "step": "Use Alternative Packages for punycode",
-      "description": "If the issue persists, install the latest punycode package from npm and replace the deprecated punycode module with the new package.",
-      "command": "npm install punycode"
-    },
-    "3": {
-      "step": "Suppress Deprecation Warnings (Temporary Solution)",
-      "description": "If the deprecation warning isn't affecting functionality and you want to suppress it temporarily, add the following code in your bot.js or run the Node.js process with the --no-deprecation flag.",
-      "code": "process.removeAllListeners('warning');",
-      "command": "node --no-deprecation bot.js"
-    },
-    "4": {
-      "step": "Check for Deprecated Packages",
-      "description": "Use npm ls punycode to identify which packages are still requiring the deprecated module. Check if those packages have newer versions that remove this dependency.",
-      "command": "npm ls punycode"
-    }
-  }
+  "license": "MIT"
 }
