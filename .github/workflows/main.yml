@@ -23,9 +23,6 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway login --token $RAILWAY_TOKEN
 
-      - name: Select Railway Project
-        run: railway use mc-node-bot-jump1
-
       - name: Stop Railway Service
         run: railway down
 
