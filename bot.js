@@ -6,7 +6,7 @@ function createBot() {
   bot = mineflayer.createBot({
     host: 'smsram.aternos.me', // Replace with your Aternos server IP
     port: 48121,              // Use your specific port
-    username: `Bot_gadu`, // Random username
+    username: `bot_gadu`, // Random username
     version: '1.21.4',        // Specify the exact version of the server
     auth: 'offline',          // Use offline auth for cracked servers
   });
