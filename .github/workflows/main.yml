@@ -1,11 +1,11 @@
-name: Auto Redeploy
+name: Restart Railway Server
 
 on:
   schedule:
-    - cron: "0 */1 * * *" # Runs every 1 hour
+    - cron: "0 * * * *" # Runs every hour
 
 jobs:
-  redeploy:
+  restart:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,5 +18,8 @@ jobs:
       - name: Login to Railway
         run: railway login --token ${{ secrets.RAILWAY_TOKEN }}
 
-      - name: Redeploy Project
+      - name: Stop Railway Service
+        run: railway down
+
+      - name: Start Railway Service
         run: railway up
