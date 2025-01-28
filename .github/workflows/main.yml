@@ -1,25 +1,22 @@
-name: Restart Railway Server
+name: Redeploy Entire Railway Repository
 
 on:
   schedule:
-    - cron: "0 * * * *" # Runs every hour
+    - cron: "0 */1 * * * *" # Runs every 4 hours
 
 jobs:
-  restart:
+  redeploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Railway CLI
+      - name: Install Railway CLI
         run: curl -fsSL https://railway.app/install.sh | sh
 
       - name: Login to Railway
         run: railway login --token ${{ secrets.RAILWAY_TOKEN }}
 
-      - name: Stop Railway Service
-        run: railway down
-
-      - name: Start Railway Service
-        run: railway up
+      - name: Redeploy Entire Project
+        run: railway up --detach
