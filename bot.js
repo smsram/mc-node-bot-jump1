@@ -2,19 +2,24 @@ const mineflayer = require('mineflayer');
 
 let bot;
 let reconnecting = false;
+let useUpperCaseBot = true; // Toggle between 'Bot_Gadu' and 'bot_gadu'
 
 function createBot() {
+  const botName = useUpperCaseBot ? 'Bot_Gadu' : 'bot_gadu';
+  console.log(`Starting bot with username: ${botName}`);
+
   bot = mineflayer.createBot({
     host: 'smsram.aternos.me',
     port: 48121,
-    username: 'bot_gadu',
+    username: botName,
     version: '1.21.4',
     auth: 'offline',
   });
 
   bot.on('spawn', () => {
-    console.log('Bot has spawned!');
+    console.log(`${botName} has spawned!`);
     setTimeout(startRandomMovement, 5000);
+    scheduleBotSwitch(); // Schedule the next switch
   });
 
   bot.on('error', (err) => {
@@ -27,17 +32,26 @@ function createBot() {
   });
 
   bot.on('end', () => {
-    console.log('Bot disconnected.');
+    console.log(`${botName} disconnected.`);
     attemptReconnect();
   });
 
-  // ✅ Prevent crashes caused by missing vehicle data
   bot.on('entityAttach', (entity, vehicle) => {
     if (!vehicle) {
       console.warn('⚠️ Warning: Vehicle is undefined, ignoring attachment.');
       return;
     }
   });
+}
+
+// Schedule bot switch every 4 hours
+function scheduleBotSwitch() {
+  setTimeout(() => {
+    console.log('Switching bot usernames...');
+    bot.end(); // Disconnect current bot
+    useUpperCaseBot = !useUpperCaseBot; // Toggle username
+    createBot(); // Start new bot
+  }, 4 * 60 * 60 * 1000); // 4 hours in milliseconds
 }
 
 // Safe movement function
