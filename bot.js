@@ -24,14 +24,16 @@ function createBot() {
 
   bot.on('error', (err) => {
     console.error('Bot error:', err);
-    if (err.code === 'ECONNRESET') {
-      attemptReconnect(); // Attempt reconnection on ECONNRESET
+    if (err.code === 'ECONNRESET' || err.message.includes('duplicate_login')) {
+      attemptReconnect(); // Attempt reconnection on duplicate login or ECONNRESET
     }
   });
 
   bot.on('kicked', (reason) => {
     console.error('Bot was kicked:', reason);
-    attemptReconnect(); // Attempt reconnection after kick
+    if (reason.translate && reason.translate === 'multiplayer.disconnect.duplicate_login') {
+      attemptReconnect(); // Handle duplicate login by reconnecting with a different username
+    }
   });
 
   bot.on('end', () => {
