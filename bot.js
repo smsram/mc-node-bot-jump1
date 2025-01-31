@@ -24,11 +24,14 @@ function createBot() {
 
   bot.on('error', (err) => {
     console.error('Bot error:', err);
+    if (err.code === 'ECONNRESET') {
+      attemptReconnect(); // Attempt reconnection on ECONNRESET
+    }
   });
 
   bot.on('kicked', (reason) => {
     console.error('Bot was kicked:', reason);
-    attemptReconnect();
+    attemptReconnect(); // Attempt reconnection after kick
   });
 
   bot.on('end', () => {
@@ -82,7 +85,7 @@ function attemptReconnect() {
   setTimeout(() => {
     reconnecting = false;
     createBot();
-  }, 10000);
+  }, 20000); // Increased reconnection timeout to 20 seconds
 }
 
 // Start bot
