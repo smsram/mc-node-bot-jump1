@@ -5,7 +5,7 @@ let reconnecting = false;
 let useUpperCaseBot = true; // Toggle between 'Bot_Gadu' and 'bot_gadu'
 
 function createBot() {
-  const botName = useUpperCaseBot ? 'Bot_Gadu' : 'bot_gadu';
+  const botName = useUpperCaseBot ? 'botGadu' : 'bot_gadu';
   console.log(`Starting bot with username: ${botName}`);
 
   bot = mineflayer.createBot({
