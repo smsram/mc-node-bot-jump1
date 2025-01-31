@@ -5,7 +5,7 @@ let reconnecting = false;
 let useUpperCaseBot = true; // Toggle between 'Bot_Gadu' and 'bot_gadu'
 
 function createBot() {
-  const botName = useUpperCaseBot ? 'botGadu' : 'bot_gadu';
+  const botName = useUpperCaseBot ? 'bot_Gadu' : 'bot_gadu';
   console.log(`Starting bot with username: ${botName}`);
 
   bot = mineflayer.createBot({
@@ -33,7 +33,7 @@ function createBot() {
 
   bot.on('end', () => {
     console.log(`${botName} disconnected.`);
-    attemptReconnect();
+    reconnecting = false; // Allow reconnection
   });
 
   bot.on('entityAttach', (entity, vehicle) => {
@@ -48,9 +48,13 @@ function createBot() {
 function scheduleBotSwitch() {
   setTimeout(() => {
     console.log('Switching bot usernames...');
-    bot.end(); // Disconnect current bot
-    useUpperCaseBot = !useUpperCaseBot; // Toggle username
-    createBot(); // Start new bot
+    
+    bot.once('end', () => {
+      useUpperCaseBot = !useUpperCaseBot; // Toggle username
+      createBot(); // Start new bot
+    });
+
+    bot.end(); // Disconnect current bot properly
   }, 4 * 60 * 60 * 1000); // 4 hours in milliseconds
 }
 
