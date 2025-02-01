@@ -2,65 +2,42 @@ const mineflayer = require('mineflayer');
 
 let bot;
 let reconnecting = false;
-let useUpperCaseBot = true; // Toggle between 'Bot_Gadu' and 'bot_gadu'
 
 function createBot() {
-  const botName = useUpperCaseBot ? 'botGadu' : 'bot_Gadu';
-  console.log(`Starting bot with username: ${botName}`);
-
   bot = mineflayer.createBot({
     host: 'smsram.aternos.me',
     port: 48121,
-    username: botName,
+    username: 'bot_gadu',
     version: '1.21.4',
     auth: 'offline',
   });
 
   bot.on('spawn', () => {
-    console.log(`${botName} has spawned!`);
+    console.log('Bot has spawned!');
     setTimeout(startRandomMovement, 5000);
-    scheduleBotSwitch(); // Schedule the next switch
   });
 
   bot.on('error', (err) => {
     console.error('Bot error:', err);
-    if (err.code === 'ECONNRESET' || err.message.includes('duplicate_login')) {
-      attemptReconnect(); // Attempt reconnection on duplicate login or ECONNRESET
-    }
   });
 
   bot.on('kicked', (reason) => {
     console.error('Bot was kicked:', reason);
-    if (reason.translate && reason.translate === 'multiplayer.disconnect.duplicate_login') {
-      attemptReconnect(); // Handle duplicate login by reconnecting with a different username
-    }
+    attemptReconnect();
   });
 
   bot.on('end', () => {
-    console.log(`${botName} disconnected.`);
-    reconnecting = false; // Allow reconnection
+    console.log('Bot disconnected.');
+    attemptReconnect();
   });
 
+  // ✅ Prevent crashes caused by missing vehicle data
   bot.on('entityAttach', (entity, vehicle) => {
     if (!vehicle) {
       console.warn('⚠️ Warning: Vehicle is undefined, ignoring attachment.');
       return;
     }
   });
-}
-
-// Schedule bot switch every 4 hours
-function scheduleBotSwitch() {
-  setTimeout(() => {
-    console.log('Switching bot usernames...');
-    
-    bot.once('end', () => {
-      useUpperCaseBot = !useUpperCaseBot; // Toggle username
-      createBot(); // Start new bot
-    });
-
-    bot.end(); // Disconnect current bot properly
-  }, 4 * 60 * 60 * 1000); // 4 hours in milliseconds
 }
 
 // Safe movement function
@@ -87,7 +64,7 @@ function attemptReconnect() {
   setTimeout(() => {
     reconnecting = false;
     createBot();
-  }, 20000); // Increased reconnection timeout to 20 seconds
+  }, 10000);
 }
 
 // Start bot
