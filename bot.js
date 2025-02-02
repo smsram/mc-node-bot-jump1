@@ -1,71 +1,100 @@
 const mineflayer = require('mineflayer');
 
 let bot;
-let reconnecting = false;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 10; // Maximum retries within 4 hours
+
+// Time Config (in milliseconds)
+const RUN_TIME = 4 * 60 * 60 * 1000; // 4 hours
+const DELAY_TIME = 4 * 60 * 60 * 1000; // 4 hours
+
+// Start by running the bot immediately
+createBot();
 
 function createBot() {
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    console.log('🚫 Max reconnection attempts reached! Waiting 4 hours before restarting.');
+    scheduleReconnect();
+    return;
+  }
+
   bot = mineflayer.createBot({
     host: 'smsram.aternos.me',
     port: 48121,
     username: 'bot_gadu',
     version: '1.21.4',
     auth: 'offline',
+    viewDistance: 'tiny',
+    disableChatSigning: true,
+    physicsEnabled: false
   });
 
   bot.on('spawn', () => {
-    console.log('Bot has spawned!');
-    setTimeout(startRandomMovement, 5000);
-  });
-
-  bot.on('error', (err) => {
-    console.error('Bot error:', err);
+    console.log('✅ Bot has spawned!');
+    reconnectAttempts = 0; // Reset reconnection count on successful join
+    startRandomMovement();
+    setTimeout(stopBot, RUN_TIME); // Run for 4 hours before stopping
   });
 
   bot.on('kicked', (reason) => {
-    console.error('Bot was kicked:', reason);
-    attemptReconnect();
+    console.error(`⚠️ Bot was kicked: ${reason}`);
+    handleReconnection();
   });
 
   bot.on('end', () => {
-    console.log('Bot disconnected.');
-    attemptReconnect();
+    console.log('🔄 Bot disconnected.');
+    handleReconnection();
   });
 
-  // ✅ Prevent crashes caused by missing vehicle data
-  bot.on('entityAttach', (entity, vehicle) => {
-    if (!vehicle) {
-      console.warn('⚠️ Warning: Vehicle is undefined, ignoring attachment.');
-      return;
-    }
+  bot.on('error', (err) => {
+    console.error('❌ Bot error:', err);
+    handleReconnection();
   });
 }
 
-// Safe movement function
+// Optimized movement function
 function startRandomMovement() {
   if (!bot || !bot.entity) return;
 
-  setInterval(() => {
-    const actions = ['forward', 'back', 'left', 'right'];
-    const randomAction = actions[Math.floor(Math.random() * actions.length)];
+  const actions = ['forward', 'back', 'left', 'right'];
+  let moveInterval = setInterval(() => {
+    if (!bot || !bot.entity) {
+      clearInterval(moveInterval);
+      return;
+    }
 
+    const randomAction = actions[Math.floor(Math.random() * actions.length)];
     bot.clearControlStates();
     bot.setControlState(randomAction, true);
-
-    setTimeout(() => bot.setControlState(randomAction, false), 500);
-  }, 3000);
+    setTimeout(() => bot.setControlState(randomAction, false), 200);
+  }, 10000); // Move every 10 seconds
 }
 
-// Reconnection function
-function attemptReconnect() {
-  if (reconnecting) return;
-  reconnecting = true;
+// Stop bot after 4 hours
+function stopBot() {
+  console.log('🛑 Stopping bot for 4 hours...');
+  bot.end();
+  scheduleReconnect(); // Wait 4 hours before restarting
+}
 
-  console.log('Reconnecting bot...');
+// Handle reconnections within 4 hours
+function handleReconnection() {
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    console.log('🚫 Max reconnection attempts reached! Waiting for next cycle.');
+    scheduleReconnect();
+    return;
+  }
+
+  reconnectAttempts++;
+  console.log(`🔁 Reconnect attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}...`);
+  setTimeout(createBot, 60000); // Try reconnecting every 60 seconds
+}
+
+// Schedule next cycle after 4-hour wait
+function scheduleReconnect() {
+  console.log(`⏳ Waiting ${DELAY_TIME / (60 * 60 * 1000)} hours before restarting...`);
   setTimeout(() => {
-    reconnecting = false;
+    reconnectAttempts = 0;
     createBot();
-  }, 10000);
+  }, DELAY_TIME);
 }
-
-// Start bot
-createBot();
