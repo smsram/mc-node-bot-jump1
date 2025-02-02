@@ -5,8 +5,8 @@ let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 20; // Maximum retries within 4 hours
 
 // Time Config (in milliseconds)
-const RUN_TIME = 2 * 60 * 60 * 1000; // 2 hours
-const DELAY_TIME = 2 * 60 * 60 * 1000; // 2 hours
+const RUN_TIME = 1 * 60 * 60 * 1000; // 1 hours
+const DELAY_TIME = 1 * 60 * 60 * 1000; // 1 hours
 
 // Start by running the bot immediately
 createBot();
