@@ -1,8 +1,9 @@
 const mineflayer = require('mineflayer');
 
 let bot;
-let reconnecting = false;
 let moveInterval;
+let isRunning = false;
+let startTime;
 
 // Time Config (in milliseconds)
 const RUN_TIME = 1 * 60 * 60 * 1000; // 1 hour active
@@ -12,8 +13,11 @@ const REST_TIME = 1 * 60 * 60 * 1000; // 1 hour rest
 createBot();
 
 function createBot() {
-  if (reconnecting) return; // Prevent multiple reconnections
+  if (isRunning) return; // Prevent multiple bots running at once
+
   console.log('🚀 Starting bot...');
+  isRunning = true;
+  startTime = Date.now(); // Mark the start time
 
   bot = mineflayer.createBot({
     host: 'smsram.aternos.me',
@@ -27,25 +31,24 @@ function createBot() {
   });
 
   bot.on('spawn', () => {
-    console.log('✅ Bot has spawned and will move for 1 hour.');
-    reconnecting = false;
+    console.log('✅ Bot has joined and will move for 1 hour.');
     startRandomMovement();
     setTimeout(stopBot, RUN_TIME); // Stop bot after 1 hour
   });
 
   bot.on('kicked', (reason) => {
     console.error(`⚠️ Bot was kicked: ${reason}`);
-    handleReconnection();
+    if (shouldReconnect()) reconnectInstantly();
   });
 
   bot.on('end', () => {
     console.log('🔄 Bot disconnected.');
-    handleReconnection();
+    if (shouldReconnect()) reconnectInstantly();
   });
 
   bot.on('error', (err) => {
     console.error('❌ Bot error:', err);
-    handleReconnection();
+    if (shouldReconnect()) reconnectInstantly();
   });
 }
 
@@ -68,15 +71,18 @@ function startRandomMovement() {
 function stopBot() {
   console.log('🛑 Stopping bot for 1 hour...');
   clearInterval(moveInterval);
+  isRunning = false;
   bot.end();
   setTimeout(createBot, REST_TIME); // Rejoin after 1 hour
 }
 
-// Handle reconnection attempts
-function handleReconnection() {
-  if (reconnecting) return;
-  reconnecting = true;
+// Check if bot should reconnect instantly
+function shouldReconnect() {
+  return isRunning && (Date.now() - startTime) < RUN_TIME;
+}
 
-  console.log('🔁 Attempting to reconnect in 60 seconds...');
-  setTimeout(createBot, 60000); // Try reconnecting every 60 seconds
+// Reconnect instantly
+function reconnectInstantly() {
+  console.log('🔄 Reconnecting instantly...');
+  setTimeout(createBot, 5000); // Wait 5 seconds before reconnecting
 }
