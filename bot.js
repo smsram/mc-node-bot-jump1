@@ -1,28 +1,26 @@
 const mineflayer = require('mineflayer');
 
 let bot;
-let reconnectAttempts = 0;
+let moveInterval;
 let isRunning = false;
-const MAX_RECONNECT_ATTEMPTS = 20; // Limit for initial connection attempts
+let startTime;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 10; // Maximum attempts to reconnect
 
 // Time Config (in milliseconds)
 const RUN_TIME = 1 * 60 * 60 * 1000; // 1 hour active
 const REST_TIME = 1 * 60 * 60 * 1000; // 1 hour rest
+const RECONNECT_DELAY = 5000; // Delay in ms for reconnect attempts
 
 // Start bot immediately
 createBot();
 
 function createBot() {
   if (isRunning) return; // Prevent multiple bots running at once
-  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-    console.log('🚫 Max reconnection attempts reached! Waiting 1 hour before retrying.');
-    scheduleReconnect();
-    return;
-  }
 
   console.log('🚀 Starting bot...');
-  reconnectAttempts = 0; // Reset attempts after each new connection attempt
-  isRunning = true; // Mark the bot as running
+  isRunning = true;
+  startTime = Date.now(); // Mark the start time
 
   bot = mineflayer.createBot({
     host: 'smsram.aternos.me',
@@ -36,9 +34,9 @@ function createBot() {
   });
 
   bot.on('spawn', () => {
-    console.log('✅ Bot has spawned!');
+    console.log('✅ Bot has joined and will move for 1 hour.');
     startRandomMovement();
-    setTimeout(stopBot, RUN_TIME); // Run for 1 hour before stopping
+    setTimeout(stopBot, RUN_TIME); // Stop bot after 1 hour
   });
 
   bot.on('kicked', (reason) => {
@@ -57,49 +55,44 @@ function createBot() {
   });
 }
 
-// Optimized movement function
+// Bot movement function
 function startRandomMovement() {
   if (!bot || !bot.entity) return;
 
   const actions = ['forward', 'back', 'left', 'right'];
-  let moveInterval = setInterval(() => {
-    if (!bot || !bot.entity) {
-      clearInterval(moveInterval);
-      return;
-    }
+  moveInterval = setInterval(() => {
+    if (!bot || !bot.entity) return clearInterval(moveInterval);
 
     const randomAction = actions[Math.floor(Math.random() * actions.length)];
     bot.clearControlStates();
     bot.setControlState(randomAction, true);
     setTimeout(() => bot.setControlState(randomAction, false), 200);
-  }, 10000); // Move every 10 seconds
+  }, 10000); // Moves every 10 seconds
 }
 
-// Stop bot after 1 hour
+// Stop bot after 1 hour and schedule rejoin
 function stopBot() {
   console.log('🛑 Stopping bot for 1 hour...');
+  clearInterval(moveInterval);
+  isRunning = false;
   bot.end();
-  scheduleReconnect(); // Wait 1 hour before restarting
+  setTimeout(createBot, REST_TIME); // Rejoin after 1 hour
 }
 
-// Handle reconnections during the join period (within 1 hour)
+// Handle reconnection attempts
 function handleReconnection() {
-  if (isRunning) {
-    console.log('🔁 Reconnecting...'); 
-    reconnectAttempts++;
-    setTimeout(createBot, 60000); // Try reconnecting every 60 seconds
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    console.log('🚫 Max reconnection attempts reached! Waiting before retrying.');
+    reconnectAttempts = 0; // Reset attempt counter after waiting period
+    setTimeout(createBot, REST_TIME); // Wait for 1 hour before retrying
   } else {
-    console.log('⏳ Waiting before retrying connection...');
-    setTimeout(createBot, 5000); // Try reconnecting after 5 seconds if bot can't connect initially
+    reconnectAttempts++;
+    console.log(`🔄 Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
+    setTimeout(createBot, RECONNECT_DELAY); // Retry after 5 seconds
   }
 }
 
-// Schedule next cycle after 1 hour of rest
-function scheduleReconnect() {
-  console.log(`⏳ Waiting ${REST_TIME / (60 * 60 * 1000)} hour before restarting...`);
-  setTimeout(() => {
-    reconnectAttempts = 0; // Reset reconnect attempts after rest period
-    isRunning = false;
-    createBot();
-  }, REST_TIME); // Wait 1 hour before restarting the bot
+// Check if bot should reconnect instantly
+function shouldReconnect() {
+  return isRunning && (Date.now() - startTime) < RUN_TIME;
 }
