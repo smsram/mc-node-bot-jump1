@@ -6,11 +6,11 @@ let isRunning = false;
 let startTime;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10; // Maximum attempts to reconnect
+const RECONNECT_DELAY = 10000; // Delay in ms for reconnect attempts (increased to 10 seconds)
 
 // Time Config (in milliseconds)
 const RUN_TIME = 1 * 60 * 60 * 1000; // 1 hour active
 const REST_TIME = 1 * 60 * 60 * 1000; // 1 hour rest
-const RECONNECT_DELAY = 5000; // Delay in ms for reconnect attempts
 
 // Start bot immediately
 createBot();
@@ -51,6 +51,9 @@ function createBot() {
 
   bot.on('error', (err) => {
     console.error('❌ Bot error:', err);
+    if (err.code === 'ECONNRESET') {
+      console.error('⚠️ Connection was reset. Retrying...');
+    }
     handleReconnection();
   });
 }
@@ -88,7 +91,7 @@ function handleReconnection() {
   } else {
     reconnectAttempts++;
     console.log(`🔄 Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
-    setTimeout(createBot, RECONNECT_DELAY); // Retry after 5 seconds
+    setTimeout(createBot, RECONNECT_DELAY); // Retry after 10 seconds (increased delay)
   }
 }
 
