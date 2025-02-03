@@ -78,11 +78,14 @@ function stopBot() {
 
 // Check if bot should reconnect instantly
 function shouldReconnect() {
-  return isRunning && (Date.now() - startTime) < RUN_TIME;
+  return isRunning && (Date.now() - startTime) < RUN_TIME; // Only reconnect if within the active time
 }
 
 // Reconnect instantly
 function reconnectInstantly() {
   console.log('🔄 Reconnecting instantly...');
-  setTimeout(createBot, 5000); // Wait 5 seconds before reconnecting
+  if (!isRunning) {
+    isRunning = true; // Make sure reconnect attempts don't interfere with another bot creation
+    setTimeout(createBot, 5000); // Wait 5 seconds before reconnecting
+  }
 }
